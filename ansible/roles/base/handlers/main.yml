@@ -1,0 +1,10 @@
+# ansible/roles/base/handlers/main.yml
+---
+- name: Unload DVB-T module
+  become: true
+  ansible.builtin.command: modprobe -r dvb_usb_rtl28xxu
+  failed_when: false
+
+- name: Reload udev rules
+  become: true
+  ansible.builtin.command: udevadm control --reload-rules

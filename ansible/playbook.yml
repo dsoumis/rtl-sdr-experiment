@@ -1,0 +1,12 @@
+# ansible/playbook.yml
+---
+- name: RTL-SDR experiment environment setup
+  hosts: localhost
+  gather_facts: false
+
+  roles:
+    - role: base
+      tags: [base]
+
+    - role: python-sdr
+      tags: [python-sdr]

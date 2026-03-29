@@ -1,0 +1,30 @@
+# ansible/roles/base/tasks/main.yml
+---
+- name: Install RTL-SDR packages
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - rtl-sdr
+      - rtl-sdr-devel
+    state: present
+
+- name: Blacklist DVB-T kernel module
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/modprobe.d/blacklist-rtlsdr.conf
+    content: |
+      # Prevent the default DVB-T driver from claiming the RTL-SDR dongle
+      blacklist dvb_usb_rtl28xxu
+    mode: "0644"
+  notify: Unload DVB-T module
+
+- name: Add udev rules for non-root RTL-SDR access
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/udev/rules.d/20-rtlsdr.rules
+    content: |
+      # RTL-SDR dongle — allow non-root access
+      SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2838", MODE="0666"
+      SUBSYSTEM=="usb", ATTRS{idVendor}=="0bda", ATTRS{idProduct}=="2832", MODE="0666"
+    mode: "0644"
+  notify: Reload udev rules

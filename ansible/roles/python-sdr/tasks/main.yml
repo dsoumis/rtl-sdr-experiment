@@ -1,0 +1,35 @@
+# ansible/roles/python-sdr/tasks/main.yml
+---
+- name: Install SoapySDR and RTL-SDR support
+  become: true
+  ansible.builtin.dnf:
+    name:
+      - SoapySDR
+      - soapy-rtlsdr
+      - python3-SoapySDR
+    state: present
+
+- name: Check if .venv has system site-packages enabled
+  ansible.builtin.lineinfile:
+    path: "{{ playbook_dir }}/../.venv/pyvenv.cfg"
+    line: "include-system-site-packages = true"
+    state: present
+  check_mode: true
+  register: venv_check
+  failed_when: false
+
+- name: Remove .venv if it lacks system site-packages
+  ansible.builtin.file:
+    path: "{{ playbook_dir }}/../.venv"
+    state: absent
+  when: venv_check.changed | default(true)
+
+- name: Create Python venv with system site-packages
+  ansible.builtin.command:
+    cmd: python3 -m venv --system-site-packages {{ playbook_dir }}/../.venv
+    creates: "{{ playbook_dir }}/../.venv/bin/activate"
+
+- name: Install Python SDR libraries in venv
+  ansible.builtin.command:
+    cmd: "{{ playbook_dir }}/../.venv/bin/pip install numpy scipy matplotlib"
+
